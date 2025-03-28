@@ -1,0 +1,146 @@
+---
+title: "Late-Life Depression Dashboard"
+author: "Claire Williams"
+output: 
+  flexdashboard::flex_dashboard:
+    theme:
+      bg: "#101010"
+      fg: "#FDF7F7" 
+      primary: "#ED79F9"
+      base_font:
+        google: Prompt
+      code_font:
+        google: JetBrains Mono
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(readxl)
+```
+
+# Introduction and Data Description
+
+Late-life depression (LLD) applies to adults ages 65 and older and has an average estimated global prevalence of 31.8%, making it a common mental health issue (Zhao, 2023).  A 2020 article that examined NHANES data found the prevalence of severe depression in American older adults significantly increased between the years 2005 and 2016 (Yu et al., 2020).  This LLD prevalence was likely exacerbated due to the COVID-19 pandemic (Robinson et al., 2022).
+
+My capstone project uses data from the REMBRANDT study, which provides patient characteristics, depression recurrence dates, and longitudinal physical activity data collected using wearable technology consisting of over 100 patients, ages 60+.  The patients were enrolled from three different clinical sites: University of Illinois at Chicago, University of Pittsburgh, and Vanderbilt University Medical Center in Nashville, Tennessee.  More information on REMBRANDT can be found here: https://www.vumc.org/laci/rembrandt-study.  The actual data cannot be made publicly available, so I am using a replicated version of it for my second visualization.  There are three different types of patients, those who never had depression (Healthy Controls), and remitted patients who were treated for depression at the beginning of the study (Relapsed or No Relapse).  Patients in the replicated REMBRANDT study data had four recorded activity sessions each using data collected using FitBits.  The averages of each physical activity variable were taken for each session.  My first visualization uses supplementary data to give context regarding late life depression in the United States. 
+
+
+# Visualizations
+
+
+```{r, echo=FALSE, message=FALSE, fig.width=7}
+# read in the data
+lld_df <- read_excel("C:/Users/clair/OneDrive/Documents/Emory/Second Year SPRING/Current Topics/lldedited.xlsx")
+# Share of senior adult population that had depression in the U.S. 2011-2022 in %
+# Share of adults aged 65 years and above who were diagnosed with depression in the U.S. from 2011 to 2022
+# CITATION: America's Health Rankings. (July 1, 2023). Share of adults aged 65 years and above who were diagnosed with depression in the U.S. from 2011 to 2022 [Graph]. In Statista. Retrieved February 20, 2025, from https://www.statista.com/statistics/1472240/depression-among-the-elderly-population-us/
+
+lld_df$Year <- as.factor(lld_df$Year)
+
+plot2 <-ggplot(data = lld_df, aes(x = Year, y = US_LLD_Percent, group = 1, text = paste("Year:", Year, "<br>Percentage:", US_LLD_Percent, "%"))) +
+  geom_line(linewidth = 1.5, color = "darkblue") +
+  geom_point(size = 5, color = "darkblue") +
+  labs(x = "Year", y = "Prevalence of Late-Life Depression (%)", title = "U.S. Prevalence of Late Life Depression, 2011-2022") +
+  scale_y_continuous(limits = c(0, 20), breaks = seq(0, 20, by = 2.5))+
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 17),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 15)
+  )
+plot2
+
+ggplotly(plot2, tooltip = "text")
+```
+
+The above line graph displays changes in the prevalence of late-life depression in the United States between the years 2011 and 2022.  Late-life depression has increased from 13% in 2011 to 15.5% in 2022.  Additionally, there has been a recent increase since 2020.
+
+
+REMBRADNT Study Replicated Data {data-width=650 .tabset}
+-----------------------------------------------------------------------
+
+
+```{r, warning=FALSE, echo=FALSE, fig.width=13}
+#read in duplicated data
+df <- read.csv("C:/Users/clair/OneDrive/Documents/Emory/Capstone/duplicated_capstone_data.csv")
+
+#round data nicely so that it doesn't display too many decimal places for interactivity
+#create function
+round_vars <- function(data, vars, digits = 2) {
+  #make sure the specified variables exist in the specified dataset
+  vars <- intersect(vars, names(data))
+  
+  #rounding only to the specified variables
+  data[vars] <- lapply(data[vars], function(x) if (is.numeric(x)) round(x, digits) else x)
+  
+  return(data)
+}
+
+df_rounded <- round_vars(df, vars = c("hr.mean", "steps.mean", "sedentary.mean", "t.active.mean", "t.very.active.mean", "t.active.30", "t.active.60", "relapse_month_exact"), digits = 2)
+
+#create relapsed_subset for relapse X's
+relapsed_subset <- df_rounded %>%
+  filter(Type == "Relapsed")
+
+# #mean heart rate overall spag plot
+# overall_plot_1 <- ggplot(data = df_rounded, aes(x = month, y = sedentary.mean, group = ID, color = Type, text = paste("Mean Sedentary Time:", sedentary.mean,"<br>Session:", session)))+ 
+#   geom_line() + 
+#   facet_grid(. ~ Type) + 
+#   labs(y="Mean Sedentary Time (Mins)", x = "Months", title = "Mean Sedentary Time Over Time With Relapses")+ 
+#   theme(text=element_text(size=20))+
+#   scale_color_manual(values = c("black", "darkblue", "darkblue"))+
+#   geom_point(data = df_rounded, aes(x = relapse_month_exact, y = sedentary.mean),
+#              na.rm = TRUE, stat = "identity", position = "identity", shape = 4, size = 3, color = "red")+
+#   theme_minimal()+
+#   theme(
+#     plot.title = element_text(size = 18),
+#     axis.title.x = element_text(size = 16),
+#     axis.title.y = element_text(size = 16)
+#   )
+
+overall_sed_plot <- ggplot(data = df_rounded, aes(x = month, y = sedentary.mean, group = ID, color = Type, text = paste("Mean Sedentary Time:", sedentary.mean,"<br>Session:", session))) +
+  geom_line() +
+  facet_grid(. ~ Type) +
+  labs(y = "Mean Sedentary Time (Mins)", x = "Months", title = "Mean Sedentary Time Across Months With Depressive Episodes") +
+  theme(text = element_text(size = 20)) +
+  scale_color_manual(values = c("black", "black", "black")) +
+  
+  # Add the red X as part of the legend
+  geom_point(data = df_rounded, 
+             aes(x = relapse_month_exact, y = sedentary.mean, shape = "Depressive Episode"), 
+             size = 4, color = "red") +
+  
+  # Define the legend for shape
+  scale_shape_manual(
+    values = c("Depressive Episode" = 4),  # X for relapse, dot for censorship
+    name = "Event"
+  ) +
+  
+  # Suppress the color legend
+  guides(
+    shape = guide_legend(title = "Event"),
+    color = "none"
+  )
+
+#use ggplotly to make spaghetti plot interactive
+ggplotly(overall_sed_plot, tooltip = "text")
+```
+
+The spaghetti plot shows replicated data from the REMBRANDT study, and specifically displays each patient's change in mean sedentary time between each activity session.  The patient data is separated by patient type, and red X's indicate when a depressive episode, or relapse, occurred during the study period of 2 years.  This graph shows the majority of relapses occurred when mean sedentary time was high. 
+
+# Sources
+
+America's Health Rankings. (2023, July 1). Share of adults aged 65 years and above who were diagnosed with depression in the U.S. from 2011 to 2022. Statista. Retrieved February 20, 2025, from https://www.statista.com/statistics/1472240/depression-among-the-elderly-population-us/
+
+Robinson, E., Sutin, A. R., Daly, M., & Jones, A. (2022). A systematic review and meta-analysis of longitudinal cohort studies comparing mental health before versus during the COVID-19 pandemic in 2020. Journal of affective disorders, 296, 567–576. https://doi.org/10.1016/j.jad.2021.09.098
+
+Yu, B., Zhang, X., Wang, C., Sun, M., Jin, L., & Liu, X. (2020). Trends in depression among adults in the United States, NHANES 2005–2016. Journal of Affective Disorders, 263, 609-620. https://doi.org/10.1016/j.jad.2019.11.036
+
+Zhao, Y., Wu, X., Tang, M., Shi, L., Gong, S., Mei, X., Zhao, Z., He, J., Huang, L., & Cui, W. (2023). Late-life depression: Epidemiology, phenotype, pathogenesis and treatment before and during the COVID-19 pandemic. Frontiers in psychiatry, 14, 1017203. https://doi.org/10.3389/fpsyt.2023.1017203
+
+
