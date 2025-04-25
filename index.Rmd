@@ -36,7 +36,7 @@ The line graph below displays changes in the prevalence of late-life depression 
 
 ```{r, echo=FALSE, message=FALSE, fig.width=7}
 # read in the data
-lld_df <- read_excel("C:/Users/clair/OneDrive/Documents/Emory/Second Year SPRING/Current Topics/dashboard/lldedited.xlsx")
+lld_df <- read_excel("C:/Users/clair/OneDrive/Documents/Emory/Second Year SPRING/Current Topics/dashboard/data/lldedited.xlsx")
 # Share of senior adult population that had depression in the U.S. 2011-2022 in %
 # Share of adults aged 65 years and above who were diagnosed with depression in the U.S. from 2011 to 2022
 # CITATION: America's Health Rankings. (July 1, 2023). Share of adults aged 65 years and above who were diagnosed with depression in the U.S. from 2011 to 2022 [Graph]. In Statista. Retrieved February 20, 2025, from https://www.statista.com/statistics/1472240/depression-among-the-elderly-population-us/
