@@ -1,8 +1,11 @@
 # README
 
-### By: Claire Williams
+### Claire Williams
 
-### Dashboard URL: 
+
+### Dashboard URL:
+
+
 
 ### Project Description
 
